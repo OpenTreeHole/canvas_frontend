@@ -1,0 +1,9 @@
+.bottom {
+    position: absolute;
+    bottom: 0;
+    /*opacity: 0.5;*/
+}
+
+.solid {
+    opacity: 1;
+}
