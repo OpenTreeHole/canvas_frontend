@@ -1,0 +1,19 @@
+name: Deploy
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout branch
+        uses: actions/checkout@master
+
+      - name: install node
+        uses: actions/setup-node@v2.1.5
+
+      - name: yarn install and build
+        run: |
+          yarn install
+          yarn build
+        env:
+          CI: true
+
