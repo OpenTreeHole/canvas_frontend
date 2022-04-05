@@ -1,18 +1,19 @@
 <template>
   <main ref="main">
     <canvas
-      id="canvas" :width="w" :height="h"
+      id="canvas" ref="canvas"
+      :width="w" :height="h"
       @wheel="onWheel"
       @mousemove="onMouseMove"
       @mousedown="isMoving = true"
       @mouseup="isMoving = false"
+      @click="onClick"
     >
     </canvas>
     <div class="bottom">
+      <n-button @click="modifyPixel">button</n-button>
       <n-card size="small"> {{ x > 0 && y > 0 ? `${x}, ${y}` : '-, -' }}</n-card>
     </div>
-    <!--    <div id="zoom" :style="{transform: `scale(${ratio})`}">-->
-    <!--    </div>-->
   </main>
 </template>
 
@@ -33,8 +34,8 @@
     },
     data() {
       return {
-        // imgSrc: '/api/picture',
-        imgSrc: 'img/ran.png',
+        imgSrc: '/api/picture',
+        wsUrl: 'ws://localhost:3000/api/ws',
         originalSize: 0,
         w: 0,  // canvas width
         h: 0,  // canvas height
@@ -44,8 +45,7 @@
         y: 0,  // y coordinate of the pixel
         isMoving: false,
         ratio: 1,
-        canvas: null,
-        ctx: null,
+        pixelData: {},
       }
     },
     computed: {
@@ -54,9 +54,34 @@
       }
     },
     methods: {
+      async getPixel() {
+        let r = await fetch(`/api/pixels?x=${this.x}&y=${this.y}`)
+        this.pixelData = await r.json()
+      },
+      async modifyPixel() {
+        const data = {
+          'color': '654321'
+        }
+        const r = await fetch(`/api/pixels/${this.pixelData.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        })
+      },
+      updatePixel(pixel) {
+        const imageData = this.fixedCtx.createImageData(1, 1)
+        for (let i = 0; i < 3; i++) {
+          imageData.data[i] = parseInt(pixel.color.slice(2 * i, 2 * i + 2), 16)
+        }
+        imageData.data[3] = 255
+        this.fixedCtx.putImageData(imageData, pixel.x - 1, pixel.y - 1)
+        this.drawImage()
+      },
       clearImage() {
         this.ctx.fillStyle = 'white'
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+        this.ctx.fillRect(0, 0, this.w, this.h)
       },
       drawImage(r = this.ratio, x = this.x, y = this.y) {
         this.dx = this.dx - (r - this.ratio) * x
@@ -64,7 +89,7 @@
         this.ratio = r
         this.ctx.imageSmoothingEnabled = false
         this.clearImage()
-        this.ctx.drawImage(this.bitmap, this.dx, this.dy, this.currentSize, this.currentSize)
+        this.ctx.drawImage(this.canvas, this.dx, this.dy, this.currentSize, this.currentSize)
       },
       moveImage(x, y) {
         this.dx += x
@@ -72,7 +97,6 @@
         this.drawImage()
       },
       onKeyDown(e) {
-        console.log(e.key)
         const px = 25
         if (e.key === 'w' || e.key === 'ArrowUp') {
           this.moveImage(0, px)
@@ -84,43 +108,82 @@
           this.moveImage(-px, 0)
         }
       },
-      onMouseMove(e) {
-        if (this.isMoving) {
-          this.moveImage(e.movementX, e.movementY)
-        }
+      calculateCoordinate(e) {
         const calculate = (offset, d) => {
           return Math.ceil((offset - d) / this.ratio)
         }
         this.x = calculate(e.offsetX, this.dx)
         this.y = calculate(e.offsetY, this.dy)
       },
+      onClick(e) {
+        this.calculateCoordinate(e)
+        this.getPixel()
+      },
+      onMouseMove(e) {
+        if (this.isMoving) {
+          this.moveImage(e.movementX, e.movementY)
+        }
+        this.calculateCoordinate(e)
+      },
       async onWheel(e) {
         // this.canvas.style.transformOrigin = `${e.offsetX}px ${e.offsetY}px`
         let level = -e.deltaY > 0 ? 1 : -1 // 正值为放大，负值为缩小
         this.drawImage(Math.max(this.ratio + level, 1))
         // this.ctx.scale(ratio, ratio)
-      }
-      ,
+      },
       async onMounted() {
+        // load image
         let img = new Image()
         img.src = this.imgSrc
         img.crossOrigin = 'Anonymous'
         await new Promise((r) => (img.onload = r))
+        // set data
         this.originalSize = img.width
         this.dx = Math.floor((this.w - this.originalSize) / 2)
         this.dy = Math.floor((this.h - this.originalSize) / 2)
-        this.bitmap = await createImageBitmap(img)
-        this.drawImage(1, Math.floor(this.originalSize / 2), Math.floor(this.originalSize / 2))
+        // create a fixed canvas
+        let canvas = document.createElement('canvas')
+        canvas.width = canvas.height = this.originalSize
+        const ctx = canvas.getContext('2d', {alpha: false})
+        ctx.drawImage(img, 0, 0, img.width, img.width)
+        this.canvas = canvas
+        this.fixedCtx = ctx
+        // draw to the real canvas
+        const center = Math.floor(this.originalSize / 2)
+        this.drawImage(1, center, center)
+      },
+      connectWs() {
+        const connect = () => {
+          return new WebSocket(this.wsUrl)
+        }
+        let ws = connect()
+        ws.onopen = () => {
+          console.log('websocket connected')
+        }
+        ws.onerror = () => {
+          console.log('websocket connect failed')
+          ws = connect()
+        }
+        ws.onclose = () => {
+          console.log('websocket disconnected')
+          ws = connect()
+        }
+        ws.onmessage = this.onMessage
+      },
+      onMessage(e) {
+        const data = JSON.parse(e.data)
+        if (data.type === 'pixel') {
+          this.updatePixel(data.data)
+        }
       }
-      ,
     },
     mounted() {
-      this.canvas = document.getElementById('canvas')
       this.w = this.$refs.main.offsetWidth
       this.h = this.$refs.main.offsetHeight
-      this.ctx = this.canvas.getContext('2d', {alpha: false})
+      this.ctx = this.$refs.canvas.getContext('2d', {alpha: false})
       this.onMounted()
       document.addEventListener('keydown', this.onKeyDown)
+      this.connectWs()
     }
     ,
   }
