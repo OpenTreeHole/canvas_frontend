@@ -1,5 +1,5 @@
 <template>
-  <div class="pixel-info">
+  <div class="pixel">
     <div class="coordinates">
       <div v-for="(value, i) in [x, y]" :key="i" class="bold">
         <span>{{ i === 0 ? 'X' : 'Y' }}：{{ value }}</span>
@@ -43,13 +43,25 @@
 </script>
 
 <style scoped>
-    .pixel-info {
+    .pixel {
         position: relative;
         left: 125%;
         top: -50%;
         width: max-content;
-        background-color: #CCCCCC;
+        background-color: rgba(204, 204, 204, 0.5);
         padding: 1em;
+    }
+
+    /* 此时一个点大小为 24 px */
+    .pixel:before {
+        content: "";
+        width: 0;
+        height: 0;
+        border-top: 6px solid transparent;
+        border-bottom: 6px solid transparent;
+        border-right: 6px solid rgba(204, 204, 204, 0.5);
+        position: absolute;
+        left: -6px;
     }
 
     .coordinates {
@@ -66,25 +78,13 @@
         margin-left: 1em;
     }
 
+
     .color-block {
         color: transparent;
         margin-left: 0.25em;
     }
 
-
     hr {
         border: 0.5px solid rgba(128, 128, 128, 0.42);
     }
-
-    /*.pixel-info:before {*/
-    /*    content: "";*/
-    /*    width: 0;*/
-    /*    height: 0;*/
-    /*    border-top: 0.5em solid transparent;*/
-    /*    border-bottom: 0.5em solid transparent;*/
-    /*    border-right: 0.5em solid #CCCCCC;*/
-    /*    position: absolute;*/
-    /*    top: 12.5%;*/
-    /*    left: -16.666%;*/
-    /*}*/
 </style>

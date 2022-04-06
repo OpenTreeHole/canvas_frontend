@@ -12,6 +12,8 @@ const store = createStore({
       ratio: 1,
       x: 0,
       y: 0,
+      dx: 0, // The x coordinate in the canvas at which to place the top-left corner of the source image
+      dy: 0, // The y coordinate in the canvas at which to place the top-left corner of the source image
       pixelData: {},
     }
   },
@@ -27,6 +29,10 @@ const store = createStore({
     setCoordinate(state, coordinate) {
       state.x = coordinate[0]
       state.y = coordinate[1]
+    },
+    setDxDy(state, coordinate) {
+      state.dx = coordinate[0]
+      state.dy = coordinate[1]
     },
     setPixelData(state, data) {
       state.pixelData = data

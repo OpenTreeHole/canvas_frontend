@@ -1,20 +1,6 @@
 <template>
   <main ref="main">
-    <div
-      :class="[
-        'frame',
-        frameDisplay ? '' : 'hidden',
-        borderDisplay ? '' : 'frame-no-border'
-      ]"
-      :style="{
-        height: ratio + 'px',
-        width: ratio + 'px',
-        top: frameTop + 'px',
-        left: frameLeft + 'px',
-      }"
-    >
-      <Pixel :="pixelData"/>
-    </div>
+    <PixelInfo></PixelInfo>
     <canvas
       id="canvas" ref="canvas"
       :width="w" :height="h"
@@ -30,23 +16,16 @@
 
 
 <script>
-  import {NButton, NCard, NCollapse, NCollapseItem, NDivider, NImage, NSlider,} from 'naive-ui'
-  import Pixel from "@/components/Pixel.vue";
-  import BottomPanel from "@/components/BottomPanel.vue";
   import bus from 'vue3-eventbus'
+  import {mapState} from "vuex"
+  import BottomPanel from "@/components/BottomPanel.vue"
+  import PixelInfo from "@/components/PixelInfo.vue"
 
   export default {
     name: 'Home',
     components: {
+      PixelInfo,
       BottomPanel,
-      Pixel,
-      NCard,
-      NButton,
-      NCollapse,
-      NCollapseItem,
-      NSlider,
-      NDivider,
-      NImage,
     },
     data() {
       return {
@@ -55,32 +34,15 @@
         originalSize: 0,
         w: 0,  // canvas width
         h: 0,  // canvas height
-        dx: 0,  // The x coordinate in the canvas at which to place the top-left corner of the source image
-        dy: 0,  // The y coordinate in the canvas at which to place the top-left corner of the source image
-        frameTop: 0,
-        frameLeft: 0,
-        frameDisplay: false,
-        borderDisplay: false,
       }
     },
     computed: {
-      ratio() {
-        return this.$store.state.ratio
-      },
-      x() {  // x coordinate of the pixel
-        return this.$store.state.x
-      },
-      y() {  // y coordinate of the pixel
-        return this.$store.state.y
-      },
+      ...mapState(['ratio', 'x', 'y', 'dx', 'dy', 'pixelData']),
       validCoordinate() {
         return this.x > 0 && this.y > 0 && this.x <= this.originalSize && this.y <= this.originalSize
       },
       currentSize() {
         return Math.floor(this.originalSize * this.ratio)
-      },
-      pixelData() {
-        return this.$store.state.pixelData
       },
     },
     methods: {
@@ -110,37 +72,26 @@
         this.drawImage()
       },
       clearImage() {
-        // clear pixel info
-        this.frameTop = this.frameLeft = 0
-        this.frameDisplay = false
         // clear canvas
         this.ctx.fillStyle = 'white'
         this.ctx.fillRect(0, 0, this.w, this.h)
       },
       drawImage(r = this.ratio, x = this.x, y = this.y) {
-        this.dx = this.dx - (r - this.ratio) * x
-        this.dy = this.dy - (r - this.ratio) * y
+        this.$store.commit('setDxDy', [
+          this.dx - (r - this.ratio) * x,
+          this.dy - (r - this.ratio) * y
+        ])
         this.$store.commit('setRatio', r)
         this.ctx.imageSmoothingEnabled = false
         this.clearImage()
         this.ctx.drawImage(this.canvas, this.dx, this.dy, this.currentSize, this.currentSize)
       },
       moveImage(x, y) {
-        this.dx += x
-        this.dy += y
+        this.$store.commit('setDxDy', [
+          this.dx + x,
+          this.dy + y
+        ])
         this.drawImage()
-      },
-      onKeyDown(e) {
-        const px = 25
-        if (e.key === 'w' || e.key === 'ArrowUp') {
-          this.moveImage(0, px)
-        } else if (e.key === 'a' || e.key === 'ArrowLeft') {
-          this.moveImage(px, 0)
-        } else if (e.key === 's' || e.key === 'ArrowDown') {
-          this.moveImage(0, -px)
-        } else if (e.key === 'd' || e.key === 'ArrowRight') {
-          this.moveImage(-px, 0)
-        }
       },
       calculateCoordinate(e) {
         const calculate = (offset, d) => {
@@ -157,21 +108,33 @@
           this.updatePixel(e.data)
         }
       },
+      onKeyDown(e) {
+        const px = 25
+        if (e.key === 'w' || e.key === 'ArrowUp') {
+          this.moveImage(0, px)
+        } else if (e.key === 'a' || e.key === 'ArrowLeft') {
+          this.moveImage(px, 0)
+        } else if (e.key === 's' || e.key === 'ArrowDown') {
+          this.moveImage(0, -px)
+        } else if (e.key === 'd' || e.key === 'ArrowRight') {
+          this.moveImage(-px, 0)
+        }
+        bus.emit('hidePixelInfo')
+      },
       onClick(e) {
         this.calculateCoordinate(e)
         if (!this.validCoordinate) {
           return
         }
-        this.frameTop = this.dy + (this.y - 1) * this.ratio
-        this.frameLeft = this.dx + (this.x - 1) * this.ratio
-        this.frameDisplay = true
-        this.borderDisplay = true
-        bus.emit('click')
+        this.drawImage(24)
         this.getPixel()
+        bus.emit('showPixelInfo')
+        bus.emit('click')
       },
       onMouseMove(e) {
         if (this.mouseDown) {
           this.moveImage(e.movementX, e.movementY)
+          bus.emit('hidePixelInfo')
         }
         this.calculateCoordinate(e)
       },
@@ -200,8 +163,10 @@
         await new Promise((r) => (img.onload = r))
         // set data
         this.originalSize = img.width
-        this.dx = Math.floor((this.w - this.originalSize) / 2)
-        this.dy = Math.floor((this.h - this.originalSize) / 2)
+        this.$store.commit('setDxDy', [
+          Math.floor((this.w - this.originalSize) / 2),
+          Math.floor((this.h - this.originalSize) / 2)
+        ])
         // create a fixed canvas
         let canvas = document.createElement('canvas')
         canvas.width = canvas.height = this.originalSize

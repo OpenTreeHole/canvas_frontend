@@ -74,10 +74,12 @@
       modifyPixel() {
         bus.emit('updatePixel', {request: true, data: this.newData})
         this.displayChoose = false
+        bus.emit('hidePixelInfo')
       },
       cancel() {
         bus.emit('updatePixel', {request: false, data: this.pixelData})
         this.displayChoose = false
+        bus.emit('hidePixelInfo')
       },
       onClick() {
         if (this.displayChoose) {
