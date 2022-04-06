@@ -14,6 +14,7 @@
   import ColorSelector from "@/components/ColorSelector.vue";
   import {LocationOnFilled} from '@vicons/material'
   import {Icon} from '@vicons/utils'
+  import {mapState} from "vuex";
 
   export default {
     name: 'BottomPanel',
@@ -23,12 +24,7 @@
       return {}
     },
     computed: {
-      x() {
-        return this.$store.state.x
-      },
-      y() {
-        return this.$store.state.y
-      },
+      ...mapState(['x', 'y', 'ratio'])
     },
     methods: {
       onUpdatePixel(e) {
@@ -45,7 +41,6 @@
         align-items: center;
         position: fixed;
         bottom: 0;
-        /*opacity: 0.5;*/
     }
 
     .coordinate {

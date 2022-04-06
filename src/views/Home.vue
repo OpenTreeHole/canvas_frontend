@@ -108,26 +108,40 @@
           this.updatePixel(e.data)
         }
       },
-      onKeyDown(e) {
-        const px = 25
-        if (e.key === 'w' || e.key === 'ArrowUp') {
-          this.moveImage(0, px)
-        } else if (e.key === 'a' || e.key === 'ArrowLeft') {
-          this.moveImage(px, 0)
-        } else if (e.key === 's' || e.key === 'ArrowDown') {
-          this.moveImage(0, -px)
-        } else if (e.key === 'd' || e.key === 'ArrowRight') {
-          this.moveImage(-px, 0)
+      async onKeyDown(e) {
+        const _move = (px = 4) => {
+          if (e.key === 'w' || e.key === 'ArrowUp') {
+            this.moveImage(0, px)
+          } else if (e.key === 'a' || e.key === 'ArrowLeft') {
+            this.moveImage(px, 0)
+          } else if (e.key === 's' || e.key === 'ArrowDown') {
+            this.moveImage(0, -px)
+          } else if (e.key === 'd' || e.key === 'ArrowRight') {
+            this.moveImage(-px, 0)
+          }
+        }
+        for (let i = 0; i < 12; i++) {
+          _move()
+          await new Promise((r) => setTimeout(r, 2))
         }
         bus.emit('hidePixelInfo')
       },
-      onClick(e) {
+      async onClick(e) {
         this.calculateCoordinate(e)
         if (!this.validCoordinate) {
           return
         }
-        this.drawImage(24)
-        this.getPixel()
+        // transition
+        let r = this.ratio
+        const step = r < 24 ? 0.2 : -0.2
+        while (r > 24.01 || r < 23.99) {
+          r += step
+          this.drawImage(r)
+          await new Promise((r) => setTimeout(r, 1))
+        }
+        this.$store.commit('setRatio', 24)
+        // show pixel info
+        await this.getPixel()
         bus.emit('showPixelInfo')
         bus.emit('click')
       },
@@ -150,10 +164,9 @@
         }
       },
       async onWheel(e) {
-        // this.canvas.style.transformOrigin = `${e.offsetX}px ${e.offsetY}px`
         let level = -e.deltaY > 0 ? 1 : -1 // 正值为放大，负值为缩小
+        level *= Math.ceil(this.ratio / 8)
         this.drawImage(Math.max(this.ratio + level, 1))
-        // this.ctx.scale(ratio, ratio)
       },
       async onMounted() {
         // load image
