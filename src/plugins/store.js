@@ -10,6 +10,9 @@ const store = createStore({
   state() {
     return {
       ratio: 1,
+      x: 0,
+      y: 0,
+      pixelData: {},
     }
   },
   getters: {
@@ -20,6 +23,13 @@ const store = createStore({
   mutations: {
     setRatio(state, ratio) {
       state.ratio = ratio
+    },
+    setCoordinate(state, coordinate) {
+      state.x = coordinate[0]
+      state.y = coordinate[1]
+    },
+    setPixelData(state, data) {
+      state.pixelData = data
     },
   },
 })

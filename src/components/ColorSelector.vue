@@ -1,0 +1,122 @@
+<template>
+  <div class="color-selector">
+    <div class="colors">
+      <n-button
+        class="color-block"
+        v-for="(color, i) in colors" :key="i"
+        :color="color"
+        @click="choose(color)"
+      >
+      </n-button>
+    </div>
+    <transition name="top">
+      <div class="choose" v-if="displayChoose">
+        <n-button type="primary" :disabled="!validated" @click="modifyPixel">✓</n-button>
+        <n-button type="error" @click="cancel">✗</n-button>
+      </div>
+    </transition>
+
+  </div>
+</template>
+
+<script>
+  import {NButton} from 'naive-ui'
+  import bus from 'vue3-eventbus'
+
+  export default {
+    name: 'ColorSelector',
+    components: {NButton},
+    props: {},
+    data() {
+      return {
+        colors: [
+          '#d32f2f',
+          '#c2185b',
+          '#7b1fa2',
+          '#512da8',
+          '#303f9f',
+          '#1976d2',
+          '#0288d1',
+          '#0097a7',
+          '#00796b',
+          '#388e3c',
+          '#689f38',
+          '#afb42b',
+          '#fbc02d',
+          '#ffa000',
+          '#f57c00',
+          '#e64a19',
+          '#5d4037',
+          '#616161',
+          '#455a64',
+          '#ffffff',
+          '#000000',
+        ],
+        displayChoose: false,
+      }
+    },
+    computed: {
+      pixelData() {
+        return this.$store.state.pixelData
+      },
+      validated() {
+        return Boolean(this.pixelData.id)
+      }
+    },
+    watch: {},
+    methods: {
+      choose(color) {
+        this.displayChoose = true
+        this.newData = JSON.parse(JSON.stringify(this.pixelData))
+        this.newData.color = color.slice(1, 10)
+        bus.emit('updatePixel', {request: false, data: this.newData})
+      },
+      modifyPixel() {
+        bus.emit('updatePixel', {request: true, data: this.newData})
+        this.displayChoose = false
+      },
+      cancel() {
+        bus.emit('updatePixel', {request: false, data: this.pixelData})
+        this.displayChoose = false
+      },
+      onClick() {
+        if (this.displayChoose) {
+          this.cancel()
+        }
+      }
+    },
+    created() {
+      bus.on('click', this.onClick)
+    }
+  }
+</script>
+
+<style scoped>
+    .color-selector {
+        display: flex;
+        flex-direction: column;
+        overflow-x: auto;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-image: linear-gradient(-180deg, rgba(241, 241, 241, 0.8) 0%, rgba(227, 227, 227, 0.8) 100%);
+    }
+
+    .color-block {
+        height: 1.5rem;
+        width: 1.5rem;
+        /*border: 0;*/
+        /*border-radius: 0.25rem;*/
+        color: transparent;
+        margin: 0 0.25rem;
+    }
+
+    .choose {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 1rem;
+    }
+
+    .choose button {
+        width: 30%;
+    }
+</style>

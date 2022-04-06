@@ -24,9 +24,7 @@
       @mouseup="onMouseUp"
     >
     </canvas>
-    <div class="bottom">
-      <n-card size="small"> {{ x > 0 && y > 0 ? `${x}, ${y}` : '-, -' }}</n-card>
-    </div>
+    <BottomPanel></BottomPanel>
   </main>
 </template>
 
@@ -34,10 +32,13 @@
 <script>
   import {NButton, NCard, NCollapse, NCollapseItem, NDivider, NImage, NSlider,} from 'naive-ui'
   import Pixel from "@/components/Pixel.vue";
+  import BottomPanel from "@/components/BottomPanel.vue";
+  import bus from 'vue3-eventbus'
 
   export default {
     name: 'Home',
     components: {
+      BottomPanel,
       Pixel,
       NCard,
       NButton,
@@ -56,34 +57,42 @@
         h: 0,  // canvas height
         dx: 0,  // The x coordinate in the canvas at which to place the top-left corner of the source image
         dy: 0,  // The y coordinate in the canvas at which to place the top-left corner of the source image
-        x: 0,  // x coordinate of the pixel
-        y: 0,  // y coordinate of the pixel
         frameTop: 0,
         frameLeft: 0,
         frameDisplay: false,
         borderDisplay: false,
-        pixelData: {},
       }
     },
     computed: {
       ratio() {
         return this.$store.state.ratio
       },
+      x() {  // x coordinate of the pixel
+        return this.$store.state.x
+      },
+      y() {  // y coordinate of the pixel
+        return this.$store.state.y
+      },
+      validCoordinate() {
+        return this.x > 0 && this.y > 0 && this.x <= this.originalSize && this.y <= this.originalSize
+      },
       currentSize() {
         return Math.floor(this.originalSize * this.ratio)
+      },
+      pixelData() {
+        return this.$store.state.pixelData
       },
     },
     methods: {
       async getPixel(x = this.x, y = this.y) {
         let r = await fetch(`/api/pixels?x=${x}&y=${y}`)
-        this.pixelData = await r.json()
-        console.log(this.pixelData)
+        this.$store.commit('setPixelData', await r.json())
       },
-      async modifyPixel() {
+      async modifyPixel(pixel = this.pixelData) {
         const data = {
-          'color': '654321'
+          'color': pixel.color
         }
-        const r = await fetch(`/api/pixels/${this.pixelData.id}`, {
+        const r = await fetch(`/api/pixels/${pixel.id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -91,7 +100,7 @@
           body: JSON.stringify(data)
         })
       },
-      updatePixel(pixel) {
+      updatePixel(pixel = this.pixelData) {
         const imageData = this.fixedCtx.createImageData(1, 1)
         for (let i = 0; i < 3; i++) {
           imageData.data[i] = parseInt(pixel.color.slice(2 * i, 2 * i + 2), 16)
@@ -137,18 +146,27 @@
         const calculate = (offset, d) => {
           return Math.ceil((offset - d) / this.ratio)
         }
-        this.x = calculate(e.offsetX, this.dx)
-        this.y = calculate(e.offsetY, this.dy)
+        const x = calculate(e.offsetX, this.dx)
+        const y = calculate(e.offsetY, this.dy)
+        this.$store.commit('setCoordinate', [x, y])
+      },
+      onUpdatePixel(e) {
+        if (e.request) {
+          this.modifyPixel(e.data)
+        } else {
+          this.updatePixel(e.data)
+        }
       },
       onClick(e) {
         this.calculateCoordinate(e)
+        if (!this.validCoordinate) {
+          return
+        }
         this.frameTop = this.dy + (this.y - 1) * this.ratio
         this.frameLeft = this.dx + (this.x - 1) * this.ratio
         this.frameDisplay = true
         this.borderDisplay = true
-        setTimeout(() => {
-          this.borderDisplay = false
-        }, 1000)
+        bus.emit('click')
         this.getPixel()
       },
       onMouseMove(e) {
@@ -229,9 +247,13 @@
       this.onMounted()
       document.addEventListener('keydown', this.onKeyDown)
       this.connectWs()
+    },
+    created() {
+      bus.on('updatePixel', this.onUpdatePixel)
     }
-    ,
   }
 </script>
 
-<style scoped></style>
+<style scoped>
+
+</style>

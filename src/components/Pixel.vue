@@ -10,7 +10,7 @@
     <hr>
     <div class="color bold">
       <span>HEX</span>
-      <div>
+      <div class="value">
         <span>#{{ color.toUpperCase() }}</span>
         <span class="color-block" :style="{backgroundColor: '#' + color}">向晚</span>
       </div>
@@ -60,6 +60,10 @@
     .color {
         display: flex;
         justify-content: space-between;
+    }
+
+    .color .value {
+        margin-left: 1em;
     }
 
     .color-block {
