@@ -2,7 +2,8 @@
   <div class="color-selector">
     <div class="colors">
       <n-button
-        class="color-block"
+        class="color"
+        size="small"
         v-for="(color, i) in colors" :key="i"
         :color="color"
         @click="choose(color)"
@@ -11,8 +12,8 @@
     </div>
     <transition name="top">
       <div class="choose" v-if="displayChoose">
-        <n-button type="primary" :disabled="!validated" @click="modifyPixel">✓</n-button>
-        <n-button type="error" @click="cancel">✗</n-button>
+        <n-button size="small" type="primary" :disabled="!validated" @click="modifyPixel">✓</n-button>
+        <n-button size="small" type="error" @click="cancel">✗</n-button>
       </div>
     </transition>
 
@@ -66,6 +67,9 @@
     watch: {},
     methods: {
       choose(color) {
+        if (!this.validated) {
+          return
+        }
         this.displayChoose = true
         this.newData = JSON.parse(JSON.stringify(this.pixelData))
         this.newData.color = color.slice(1, 10)
@@ -98,17 +102,19 @@
         display: flex;
         flex-direction: column;
         overflow-x: auto;
-        padding: 1rem;
+        padding: 1rem 1.5rem 0.75rem 1rem;
         border-radius: 0.5rem;
         background-image: linear-gradient(-180deg, rgba(241, 241, 241, 0.8) 0%, rgba(227, 227, 227, 0.8) 100%);
     }
 
-    .color-block {
+    .colors {
+        display: flex;
+    }
+
+    .color {
         height: 1.5rem;
         width: 1.5rem;
-        /*border: 0;*/
-        /*border-radius: 0.25rem;*/
-        color: transparent;
+        /*color: transparent;*/
         margin: 0 0.25rem;
     }
 
