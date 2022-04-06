@@ -27,12 +27,12 @@
     name: 'Pixel',
     components: {NCard},
     props: {
-      id: Number,
-      x: Number,
-      y: Number,
-      color: String,
-      modify_times: Number,
-      modify_time: String
+      id: {type: Number, default: 1},
+      x: {type: Number, default: 1},
+      y: {type: Number, default: 1},
+      color: {type: String, default: ''},
+      modify_times: {type: Number, default: 0},
+      modify_time: {type: String, default: ''}
     },
     computed: {
       modifyTime() {
