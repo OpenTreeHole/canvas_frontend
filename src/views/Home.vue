@@ -29,8 +29,6 @@
     },
     data() {
       return {
-        imgSrc: '/api/picture',
-        wsUrl: 'ws://localhost:3000/api/ws',
         originalSize: 0,
         w: 0,  // canvas width
         h: 0,  // canvas height
@@ -171,7 +169,7 @@
       async onMounted() {
         // load image
         let img = new Image()
-        img.src = this.imgSrc
+        img.src = '/api/picture'
         img.crossOrigin = 'Anonymous'
         await new Promise((r) => (img.onload = r))
         // set data
@@ -193,7 +191,7 @@
       },
       connectWs() {
         const connect = () => {
-          return new WebSocket(this.wsUrl)
+          return new WebSocket(window.location.origin.replace('http', 'ws') + '/api/ws')
         }
         let ws = connect()
         ws.onopen = () => {
