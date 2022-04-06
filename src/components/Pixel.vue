@@ -1,13 +1,20 @@
 <template>
   <div class="pixel-info">
-    <div v-for="(value, i) in [x, y]" :key="i">
-      <span>{{ i === 0 ? 'X' : 'Y' }}</span>
-      <span>：</span>
-      <span>{{ value }}</span>
+    <div class="coordinates">
+      <div v-for="(value, i) in [x, y]" :key="i" class="bold">
+        <span>{{ i === 0 ? 'X' : 'Y' }}：{{ value }}</span>
+      </div>
     </div>
     <div>编辑次数：{{ modify_times }}</div>
     <div>上次编辑：{{ modifyTime }}</div>
-    <div>#{{ color }}</div>
+    <hr>
+    <div class="color bold">
+      <span>HEX</span>
+      <div>
+        <span>#{{ color.toUpperCase() }}</span>
+        <span class="color-block" :style="{backgroundColor: '#' + color}">向晚</span>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -40,9 +47,29 @@
         position: relative;
         left: 125%;
         top: -50%;
-        width: 6em;
+        width: max-content;
         background-color: #CCCCCC;
         padding: 1em;
+    }
+
+    .coordinates {
+        display: flex;
+        justify-content: space-around;
+    }
+
+    .color {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .color-block {
+        color: transparent;
+        margin-left: 0.25em;
+    }
+
+
+    hr {
+        border: 0.5px solid rgba(128, 128, 128, 0.42);
     }
 
     /*.pixel-info:before {*/
