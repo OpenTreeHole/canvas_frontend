@@ -1,7 +1,7 @@
-name: Production Build
+name: Dev Build
 on:
   push:
-    branches: [ master ]
+    branches: [ dev ]
 
 env:
   APP_NAME: canvas_frontend
