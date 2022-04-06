@@ -1,17 +1,27 @@
 <template>
   <main ref="main">
+    <div
+      :class="['frame', frameDisplay ? '' : 'hidden']"
+      :style="{
+        height: ratio + 'px',
+        width: ratio + 'px',
+        top: frameTop + 'px',
+        left: frameLeft + 'px',
+        backgroundColor: 'blue'
+      }"
+    >
+      <Pixel :data="pixelData"/>
+    </div>
     <canvas
       id="canvas" ref="canvas"
       :width="w" :height="h"
       @wheel="onWheel"
       @mousemove="onMouseMove"
-      @mousedown="isMoving = true"
-      @mouseup="isMoving = false"
-      @click="onClick"
+      @mousedown="onMouseDown"
+      @mouseup="onMouseUp"
     >
     </canvas>
     <div class="bottom">
-      <n-button @click="modifyPixel">button</n-button>
       <n-card size="small"> {{ x > 0 && y > 0 ? `${x}, ${y}` : '-, -' }}</n-card>
     </div>
   </main>
@@ -20,10 +30,12 @@
 
 <script>
   import {NButton, NCard, NCollapse, NCollapseItem, NDivider, NImage, NSlider,} from 'naive-ui'
+  import Pixel from "@/components/Pixel.vue";
 
   export default {
     name: 'Home',
     components: {
+      Pixel,
       NCard,
       NButton,
       NCollapse,
@@ -43,7 +55,9 @@
         dy: 0,  // The y coordinate in the canvas at which to place the top-left corner of the source image
         x: 0,  // x coordinate of the pixel
         y: 0,  // y coordinate of the pixel
-        isMoving: false,
+        frameTop: 0,
+        frameLeft: 0,
+        frameDisplay: false,
         ratio: 1,
         pixelData: {},
       }
@@ -51,7 +65,7 @@
     computed: {
       currentSize() {
         return Math.floor(this.originalSize * this.ratio)
-      }
+      },
     },
     methods: {
       async getPixel() {
@@ -117,13 +131,31 @@
       },
       onClick(e) {
         this.calculateCoordinate(e)
+        this.frameTop = this.dy + (this.y - 1) * this.ratio
+        this.frameLeft = this.dx + (this.x - 1) * this.ratio
+        this.frameDisplay = true
+        setTimeout(() => {
+          this.frameDisplay = false
+          this.frameTop = this.frameLeft = 0
+        }, 1000)
         this.getPixel()
       },
       onMouseMove(e) {
-        if (this.isMoving) {
+        if (this.mouseDown) {
           this.moveImage(e.movementX, e.movementY)
         }
         this.calculateCoordinate(e)
+      },
+      onMouseDown(e) {
+        this.mouseDown = true
+        this.mouseClientX = e.clientX
+        this.mouseClientY = e.clientY
+      },
+      onMouseUp(e) {
+        this.mouseDown = false
+        if (this.mouseClientX === e.clientX && this.mouseClientY === e.clientY) {
+          this.onClick(e)
+        }
       },
       async onWheel(e) {
         // this.canvas.style.transformOrigin = `${e.offsetX}px ${e.offsetY}px`
@@ -178,9 +210,11 @@
       }
     },
     mounted() {
+      // init canvas
       this.w = this.$refs.main.offsetWidth
       this.h = this.$refs.main.offsetHeight
       this.ctx = this.$refs.canvas.getContext('2d', {alpha: false})
+      this.clearImage()
       this.onMounted()
       document.addEventListener('keydown', this.onKeyDown)
       this.connectWs()
