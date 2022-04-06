@@ -10,4 +10,10 @@
 
 .frame {
     position: absolute;
+    border: 1px solid
+}
+
+
+.frame-no-border {
+    border-color: transparent;
 }

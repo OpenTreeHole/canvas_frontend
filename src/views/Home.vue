@@ -1,16 +1,19 @@
 <template>
   <main ref="main">
     <div
-      :class="['frame', frameDisplay ? '' : 'hidden']"
+      :class="[
+        'frame',
+        frameDisplay ? '' : 'hidden',
+        borderDisplay ? '' : 'frame-no-border'
+      ]"
       :style="{
         height: ratio + 'px',
         width: ratio + 'px',
         top: frameTop + 'px',
         left: frameLeft + 'px',
-        backgroundColor: 'blue'
       }"
     >
-      <Pixel :data="pixelData"/>
+      <Pixel :="pixelData"/>
     </div>
     <canvas
       id="canvas" ref="canvas"
@@ -58,6 +61,7 @@
         frameTop: 0,
         frameLeft: 0,
         frameDisplay: false,
+        borderDisplay: false,
         pixelData: {},
       }
     },
@@ -70,9 +74,10 @@
       },
     },
     methods: {
-      async getPixel() {
-        let r = await fetch(`/api/pixels?x=${this.x}&y=${this.y}`)
+      async getPixel(x = this.x, y = this.y) {
+        let r = await fetch(`/api/pixels?x=${x}&y=${y}`)
         this.pixelData = await r.json()
+        console.log(this.pixelData)
       },
       async modifyPixel() {
         const data = {
@@ -96,6 +101,10 @@
         this.drawImage()
       },
       clearImage() {
+        // clear pixel info
+        this.frameTop = this.frameLeft = 0
+        this.frameDisplay = false
+        // clear canvas
         this.ctx.fillStyle = 'white'
         this.ctx.fillRect(0, 0, this.w, this.h)
       },
@@ -136,11 +145,10 @@
         this.frameTop = this.dy + (this.y - 1) * this.ratio
         this.frameLeft = this.dx + (this.x - 1) * this.ratio
         this.frameDisplay = true
-        // TODO: 延迟消失
-        // setTimeout(() => {
-        //   this.frameDisplay = false
-        //   this.frameTop = this.frameLeft = 0
-        // }, 1000)
+        this.borderDisplay = true
+        setTimeout(() => {
+          this.borderDisplay = false
+        }, 1000)
         this.getPixel()
       },
       onMouseMove(e) {
