@@ -58,11 +58,13 @@
         frameTop: 0,
         frameLeft: 0,
         frameDisplay: false,
-        ratio: 1,
         pixelData: {},
       }
     },
     computed: {
+      ratio() {
+        return this.$store.state.ratio
+      },
       currentSize() {
         return Math.floor(this.originalSize * this.ratio)
       },
@@ -100,7 +102,7 @@
       drawImage(r = this.ratio, x = this.x, y = this.y) {
         this.dx = this.dx - (r - this.ratio) * x
         this.dy = this.dy - (r - this.ratio) * y
-        this.ratio = r
+        this.$store.commit('setRatio', r)
         this.ctx.imageSmoothingEnabled = false
         this.clearImage()
         this.ctx.drawImage(this.canvas, this.dx, this.dy, this.currentSize, this.currentSize)
@@ -134,10 +136,11 @@
         this.frameTop = this.dy + (this.y - 1) * this.ratio
         this.frameLeft = this.dx + (this.x - 1) * this.ratio
         this.frameDisplay = true
-        setTimeout(() => {
-          this.frameDisplay = false
-          this.frameTop = this.frameLeft = 0
-        }, 1000)
+        // TODO: 延迟消失
+        // setTimeout(() => {
+        //   this.frameDisplay = false
+        //   this.frameTop = this.frameLeft = 0
+        // }, 1000)
         this.getPixel()
       },
       onMouseMove(e) {
