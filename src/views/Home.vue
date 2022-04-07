@@ -212,6 +212,9 @@
         if (data.type === 'pixel') {
           this.updatePixel(data.data)
         }
+        if (data.type === 'meta') {
+          this.$store.commit('setMetaData', data.data)
+        }
       }
     },
     mounted() {
