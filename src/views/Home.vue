@@ -29,13 +29,15 @@
     },
     data() {
       return {
-        originalSize: 0,
         w: 0,  // canvas width
         h: 0,  // canvas height
       }
     },
     computed: {
-      ...mapState(['ratio', 'x', 'y', 'dx', 'dy', 'pixelData']),
+      ...mapState(['ratio', 'x', 'y', 'dx', 'dy', 'pixelData', 'metaData']),
+      originalSize() {
+        return this.metaData.canvas_size
+      },
       validCoordinate() {
         return this.x > 0 && this.y > 0 && this.x <= this.originalSize && this.y <= this.originalSize
       },
@@ -173,7 +175,6 @@
         img.crossOrigin = 'Anonymous'
         await new Promise((r) => (img.onload = r))
         // set data
-        this.originalSize = img.width
         this.$store.commit('setDxDy', [
           Math.floor((this.w - this.originalSize) / 2),
           Math.floor((this.h - this.originalSize) / 2)

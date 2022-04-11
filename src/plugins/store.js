@@ -15,7 +15,10 @@ const store = createStore({
       dx: 0, // The x coordinate in the canvas at which to place the top-left corner of the source image
       dy: 0, // The y coordinate in the canvas at which to place the top-left corner of the source image
       pixelData: {},
-      metaData: {},
+      metaData: {
+        online: 0,
+        canvas_size: 500,
+      },
     }
   },
   getters: {

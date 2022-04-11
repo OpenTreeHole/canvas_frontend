@@ -5,7 +5,7 @@
         <Icon size="1rem">
           <LocationOnFilled/>
         </Icon>
-        ({{ x > 0 && y > 0 ? `${x}, ${y}` : '-, -' }})
+        {{ coordinateStr }}
       </div>
       <div class="align online">
         <Icon size="1rem">
@@ -35,7 +35,17 @@
       ...mapState(['x', 'y', 'ratio']),
       online() {
         return this.$store.state.metaData.online || 0
-      }
+      },
+      originalSize() {
+        return this.$store.state.metaData.canvas_size
+      },
+      coordinateStr() {
+        if (this.x > 0 && this.y > 0 && this.x <= this.originalSize && this.y <= this.originalSize) {
+          return `(${this.x}, ${this.y})`
+        } else {
+          return '(-, -)'
+        }
+      },
     },
     methods: {
       onUpdatePixel(e) {
