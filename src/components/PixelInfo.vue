@@ -6,7 +6,7 @@
         height: ratio + 'px',
         width: ratio + 'px',
         top: frameTop + 'px',
-        left: frameLeft + 'px',
+        left: frameLeft + 'px'
       }"
   >
     <Pixel :="pixelData"></Pixel>
@@ -35,8 +35,8 @@
     methods: {
       show() {
         this.active = true
-        this.frameTop = this.dy + (this.y - 1) * this.ratio
-        this.frameLeft = this.dx + (this.x - 1) * this.ratio
+        this.frameTop = this.dy + (this.y - 1) * this.ratio - 1  // 1是边框宽度
+        this.frameLeft = this.dx + (this.x - 1) * this.ratio - 1
       },
       hide() {
         this.active = false
@@ -54,6 +54,8 @@
 <style scoped>
     .pixel-info {
         position: absolute;
+        border: 1px solid black;
     }
+
 
 </style>

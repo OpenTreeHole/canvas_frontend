@@ -31,6 +31,7 @@
       return {
         w: 0,  // canvas width
         h: 0,  // canvas height
+        targetRatio: 24,  // 点击放大后的 ratio
       }
     },
     computed: {
@@ -133,13 +134,13 @@
         }
         // transition
         let r = this.ratio
-        const step = r < 24 ? 0.2 : -0.2
-        while (r > 24.01 || r < 23.99) {
+        const step = r < this.targetRatio ? 0.2 : -0.2
+        while (r > this.targetRatio + 0.01 || r < this.targetRatio - 0.01) {
           r += step
           this.drawImage(r)
           await new Promise((r) => setTimeout(r, 1))
         }
-        this.$store.commit('setRatio', 24)
+        this.drawImage(this.targetRatio)
         // show pixel info
         await this.getPixel()
         bus.emit('showPixelInfo')
