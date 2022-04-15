@@ -1,7 +1,10 @@
 <template>
   <main ref="main">
     <PixelInfo></PixelInfo>
+    <HomeLoader v-if="imgLoading">
+    </HomeLoader>
     <canvas
+      v-else
       id="canvas" ref="canvas"
       :width="w" :height="h"
       @wheel="onWheel"
@@ -20,10 +23,12 @@ import bus from 'vue3-eventbus'
 import {mapState} from "vuex"
 import BottomPanel from "@/components/BottomPanel.vue"
 import PixelInfo from "@/components/PixelInfo.vue"
+import HomeLoader from "@/components/HomeLoader.vue";
 
 export default {
   name: 'Home',
   components: {
+    HomeLoader,
     PixelInfo,
     BottomPanel,
   },
@@ -32,6 +37,7 @@ export default {
       w: 0,  // canvas width
       h: 0,  // canvas height
       targetRatio: 24,  // 点击放大后的 ratio
+      imgLoading: true
     }
   },
   computed: {
@@ -170,6 +176,15 @@ export default {
       img.src = '/api/picture'
       img.crossOrigin = 'Anonymous'
       await new Promise((r) => (img.onload = r))
+      await new Promise(r => setTimeout(r, 1000))
+      this.imgLoading = false
+      await this.$nextTick()
+      // init canvas
+      this.w = this.$refs.main.offsetWidth
+      this.h = this.$refs.main.offsetHeight
+      this.ctx = this.$refs.canvas.getContext('2d', {alpha: false})
+      this.clearImage()
+      await this.$nextTick()
       // set data
       this.$store.commit('setDxDy', [
         Math.floor((this.w - this.originalSize) / 2),
@@ -215,11 +230,6 @@ export default {
     }
   },
   mounted() {
-    // init canvas
-    this.w = this.$refs.main.offsetWidth
-    this.h = this.$refs.main.offsetHeight
-    this.ctx = this.$refs.canvas.getContext('2d', {alpha: false})
-    this.clearImage()
     this.onMounted()
     document.addEventListener('keydown', this.onKeyDown)
     this.connectWs()
