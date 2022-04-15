@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import {defineConfig} from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
@@ -17,7 +17,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'https://canvas.hath.top/api',
         changeOrigin: true,
         ws: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
