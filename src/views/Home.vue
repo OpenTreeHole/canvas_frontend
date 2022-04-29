@@ -24,6 +24,7 @@ import {mapState} from "vuex"
 import BottomPanel from "@/components/BottomPanel.vue"
 import PixelInfo from "@/components/PixelInfo.vue"
 import HomeLoader from "@/components/HomeLoader.vue";
+import {useMessage} from "naive-ui";
 
 export default {
   name: 'Home',
@@ -31,6 +32,9 @@ export default {
     HomeLoader,
     PixelInfo,
     BottomPanel,
+  },
+  setup() {
+    window.$message = useMessage()
   },
   data() {
     return {

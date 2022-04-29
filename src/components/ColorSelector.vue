@@ -89,6 +89,7 @@ export default {
         body: JSON.stringify(data)
       })
       if (r.status === 429) {
+        window.$message.error('Rate limit, try again later.', {keepAliveOnHover: true, duration: 5000})
         bus.emit('updatePixel', this.oldData)
       }
     },
@@ -105,7 +106,7 @@ export default {
   },
   created() {
     bus.on('click', this.onClick)
-  }
+  },
 }
 </script>
 
