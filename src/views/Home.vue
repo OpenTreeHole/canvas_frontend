@@ -53,18 +53,6 @@ export default {
     },
   },
   methods: {
-    async modifyPixel(pixel = this.pixelData) {
-      const data = {
-        'color': pixel.color
-      }
-      const r = await fetch(`/api/pixels/${pixel.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      })
-    },
     updatePixel(pixel = this.pixelData) {
       const imageData = this.fixedCtx.createImageData(1, 1)
       for (let i = 0; i < 3; i++) {
@@ -103,13 +91,6 @@ export default {
       const x = calculate(e.offsetX, this.dx)
       const y = calculate(e.offsetY, this.dy)
       this.$store.commit('setCoordinate', [x, y])
-    },
-    onUpdatePixel(e) {
-      if (e.request) {
-        this.modifyPixel(e.data)
-      } else {
-        this.updatePixel(e.data)
-      }
     },
     async onKeyDown(e) {
       const _move = (px = 4) => {
@@ -235,7 +216,7 @@ export default {
     this.connectWs()
   },
   created() {
-    bus.on('updatePixel', this.onUpdatePixel)
+    bus.on('updatePixel', this.updatePixel)
   }
 }
 </script>
