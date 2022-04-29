@@ -1,27 +1,28 @@
-import {defineConfig} from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from 'path'
+import { defineConfig } from "vite";
+import vue from "@vitejs/plugin-vue";
+import path from "path";
 
 export default defineConfig({
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
-      '@c': path.resolve(__dirname, 'src/components'),
+      "@": path.resolve(__dirname, "src"),
+      "@c": path.resolve(__dirname, "src/components"),
     },
   },
-  base: '/',
+  base: "/",
   plugins: [vue()],
   define: {
-    'process.env': {},
+    "process.env": {},
   },
   server: {
     proxy: {
-      '/api': {
-        target: 'https://canvas.hath.top/api',
+      "/api": {
+        target: "https://canvas.hath.top/api",
         changeOrigin: true,
         ws: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ""),
       },
     },
   },
-})
+});
