@@ -12,8 +12,11 @@
     </div>
     <transition name="top">
       <div class="choose" v-if="displayChoose">
-        <n-button size="small" type="primary" :disabled="!validated" @click="modifyPixel">✓</n-button>
-        <n-button size="small" type="error" @click="cancel">✗</n-button>
+        <div v-if="displayCounter" style="margin: 0 auto 0.5rem">Please wait {{ countDown }}s to continue</div>
+        <div class="buttonGroup">
+          <n-button size="small" type="primary" :disabled="(!validated) || displayCounter" @click="modifyPixel">✓</n-button>
+          <n-button size="small" type="error" @click="cancel">✗</n-button>
+        </div>
       </div>
     </transition>
 
@@ -23,7 +26,7 @@
 <script>
 import {NButton} from 'naive-ui'
 import bus from 'vue3-eventbus'
-
+import axios from '@/apis/axios'
 export default {
   name: 'ColorSelector',
   components: {NButton},
@@ -54,6 +57,8 @@ export default {
         '#000000',
       ],
       displayChoose: false,
+      displayCounter: false,
+      countDown: 0
     }
   },
   computed: {
@@ -75,23 +80,45 @@ export default {
       this.pixelData.color = color.slice(1, 10)
       bus.emit('updatePixel', this.pixelData)
     },
+    countDownTimer () {
+        if (this.countDown > 0) {
+            setTimeout(() => {
+                this.countDown -= 1
+                this.countDownTimer() 
+                if (this.countDown == 0) {
+                  this.displayCounter = false 
+                }
+            }, 1000)
+        } 
+       // 
+    },
     async modifyPixel() {
       const data = {
         'color': this.pixelData.color
       }
       this.displayChoose = false
       bus.emit('hidePixelInfo')
-      const r = await fetch(`/api/pixels/${this.pixelData.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      })
-      if (r.status === 429) {
-        window.$message.error('Rate limit, try again later.', {keepAliveOnHover: true, duration: 5000})
+      let requestUrl = '/api/pixels/' + this.pixelData.id
+      console.log("modify" + requestUrl)
+      const request = await axios({
+          url: requestUrl,
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          data: JSON.stringify(data)
+      }).then((response) => {
+          this.countDown = 10 // 6 requests per minute
+          this.countDownTimer()
+          this.displayCounter = true
+      }).catch(err => {
+        if (err.response.status == 429) window.$message.error('Rate limit, try again later.', {keepAliveOnHover: true, duration: 10000})
+        else {
+          window.$message.error(err.message, {keepAliveOnHover: true, duration: 10000})
+        }
         bus.emit('updatePixel', this.oldData)
-      }
+        console.log(err);
+      });
     },
     cancel() {
       bus.emit('updatePixel', this.pixelData)
@@ -106,6 +133,7 @@ export default {
   },
   created() {
     bus.on('click', this.onClick)
+    this.countDownTimer()
   },
 }
 </script>
@@ -132,11 +160,17 @@ export default {
 
 .choose {
   display: flex;
-  justify-content: space-around;
-  margin-top: 1rem;
+  flex-direction: column;
+  margin: 0.5rem auto 0;
+}
+
+.choose .buttonGroup {
+  display: flex;
+  justify-content: space-between;
 }
 
 .choose button {
-  width: 30%;
+  width: 10rem;
+  margin: 0 0.5rem
 }
 </style>

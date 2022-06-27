@@ -25,7 +25,7 @@ import BottomPanel from "@/components/BottomPanel.vue"
 import PixelInfo from "@/components/PixelInfo.vue"
 import HomeLoader from "@/components/HomeLoader.vue";
 import {useMessage} from "naive-ui";
-
+import config from "@/apis/config"
 export default {
   name: 'Home',
   components: {
@@ -196,6 +196,7 @@ export default {
       }
       ws.onerror = () => {
         console.log('websocket connect failed')
+        window.location.href = config.authBaseUrl + '/login?url=' + location.origin
         ws = connect()
       }
       ws.onclose = () => {
