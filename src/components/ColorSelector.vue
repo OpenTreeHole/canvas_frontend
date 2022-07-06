@@ -107,17 +107,17 @@ export default {
             'Content-Type': 'application/json',
           },
           data: JSON.stringify(data)
-      }).then((response) => {
-          this.countDown = 10 // 6 requests per minute
-          this.countDownTimer()
-          this.displayCounter = true
       }).catch(err => {
         if (err.response.status == 429) window.$message.error('Rate limit, try again later.', {keepAliveOnHover: true, duration: 10000})
         else {
           window.$message.error(err.message, {keepAliveOnHover: true, duration: 10000})
         }
         bus.emit('updatePixel', this.oldData)
-        console.log(err);
+        console.log(err)
+      }).finally(() => {
+        this.countDown = 10 // 6 requests per minute
+        this.countDownTimer()
+        this.displayCounter = true
       });
     },
     cancel() {
