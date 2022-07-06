@@ -90,7 +90,6 @@ export default {
                 }
             }, 1000)
         } 
-       // 
     },
     async modifyPixel() {
       const data = {
@@ -99,7 +98,9 @@ export default {
       this.displayChoose = false
       bus.emit('hidePixelInfo')
       let requestUrl = '/api/pixels/' + this.pixelData.id
-      console.log("modify" + requestUrl)
+      this.countDown = 10 // 6 requests per minute
+      this.countDownTimer()
+      this.displayCounter = true
       const request = await axios({
           url: requestUrl,
           method: 'PUT',
@@ -114,11 +115,7 @@ export default {
         }
         bus.emit('updatePixel', this.oldData)
         console.log(err)
-      }).finally(() => {
-        this.countDown = 10 // 6 requests per minute
-        this.countDownTimer()
-        this.displayCounter = true
-      });
+      })
     },
     cancel() {
       bus.emit('updatePixel', this.pixelData)
